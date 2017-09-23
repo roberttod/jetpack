@@ -46,6 +46,9 @@ if (program.args[0]) {
   }
 }
 
+// TODO - temp
+entry = './client'
+
 require('../server/server')(clean({
   entry: entry,
   build: build,

@@ -49,6 +49,7 @@ module.exports = function (options) {
     devServer: {
       hot: true,
       inline: true,
+      color: true,
       publicPath: '/dist/',
       historyApiFallback: {
         index: '/dist/'

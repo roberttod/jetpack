@@ -8,7 +8,7 @@ const webpackHotMiddleware = require('webpack-hot-middleware')
 const wpConf = require('../webpack.config')
 const render = require('./render')
 
-module.exports = function (cliOptions) {
+module.exports = function server (cliOptions) {
   // get pkg meta
   let pkg
   try {
@@ -72,7 +72,8 @@ function serve ({ pkg, options, webpackConfig, compiler }) {
     app.use('/dist', express.static(path.join(process.cwd(), 'dist')))
   } else {
     app.use(webpackDevMiddleware(compiler, {
-      publicPath: webpackConfig.output.publicPath
+      publicPath: webpackConfig.output.publicPath,
+      color: true
     }))
 
     app.use(webpackHotMiddleware(compiler))
@@ -84,11 +85,20 @@ function serve ({ pkg, options, webpackConfig, compiler }) {
     res.end(html || render({ name: pkg.name }))
   })
 
-  app.listen(options.port, () => {
-    console.log('##################################################')
-    console.log('#                                                #')
-    console.log('#  App started on http://localhost:' + options.port + '          #')
-    console.log('#                                                #')
-    console.log('##################################################')
-  })
+  options.client = options.entry
+  options.server = './server'
+  require('./options').__set(options)
+  require('./options').__set({ __client: app })
+
+  requireRelative(options.server, process.cwd())
+
+  return app
+
+  // app.listen(options.port, () => {
+  //   console.log('##################################################')
+  //   console.log('#                                                #')
+  //   console.log('#  App started on http://localhost:' + options.port + '          #')
+  //   console.log('#                                                #')
+  //   console.log('##################################################')
+  // })
 }
