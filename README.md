@@ -40,6 +40,7 @@ Node is very cool in it's flexibility and very large ecosystem of approaches and
 * `next.js` - server side is a heavy tradeoff and not particularly beginner friendly when it comes to fetching data. The idea that some of the code gets bundled into the client and that you have to be careful about what you import in your React components makes it slightly trickier. It also prescribes the use of `React`, which isn't a bad of a thing, it's just that `jetpack` is more flexible in that sense.
 * `bedrock` - it's much more prescriptive (more batteries included). I personally wouldn't choose it since I like to control my libraries much more.
 * `neutrino` - client side only.
+* `https://github.com/facebookincubator/create-react-app`
 
 After taking all of this into consideration, the 2 goals for `jetpack` are:
 

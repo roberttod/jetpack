@@ -12,7 +12,7 @@ module.exports = function (options) {
       filename: '[name].js',
       publicPath: '/dist/'
     },
-    devtool: 'source-map',
+    // devtool: 'eval',
     plugins: [
       new webpack.DefinePlugin({
         'process.env': {
@@ -23,10 +23,14 @@ module.exports = function (options) {
     module: {
       loaders: [{
         test: /.js$/,
-        loaders: require.resolve('buble-loader'),
+        loader: require.resolve('react-hot-loader/webpack')
+      }, {
+        test: /.js$/,
+        loader: require.resolve('buble-loader'),
         query: {
           jsx: options.jsx,
-          objectAssign: 'Object.assign'
+          objectAssign: 'Object.assign',
+          transforms: { templateString: false, modules: false }
         }
       }, {
         test: /\.css$/,
@@ -47,18 +51,21 @@ module.exports = function (options) {
       }]
     },
     devServer: {
+      noInfo: true,
       hot: true,
       inline: true,
-      color: true,
       publicPath: '/dist/',
       historyApiFallback: {
         index: '/dist/'
       },
-      stats: {
-        errors: true,
-        errorDetails: true,
-        warnings: false
-      }
+      stats: 'minimal'
+      // stats: {
+      //   assets: false,
+      //   errors: true,
+      //   errorDetails: true,
+      //   warnings: true,
+      //   colors: true
+      // }
     }
   }
 
@@ -67,7 +74,11 @@ module.exports = function (options) {
   } else if (!options.start) {
     config.plugins.push(new webpack.HotModuleReplacementPlugin())
     Object.keys(config.entry).forEach(e => {
-      config.entry[e] = [config.entry[e], require.resolve('webpack-hot-middleware/client')]
+      config.entry[e] = [
+        require.resolve('react-hot-loader/patch'),
+        require.resolve('webpack-hot-middleware/client'),
+        config.entry[e]
+      ]
     })
   }
 

@@ -3,12 +3,23 @@ const path = require('path')
 const express = require('express')
 const webpack = require('webpack')
 const requireRelative = require('require-relative')
+const chalk = require('chalk')
 const webpackDevMiddleware = require('webpack-dev-middleware')
 const webpackHotMiddleware = require('webpack-hot-middleware')
 const wpConf = require('../webpack.config')
 const render = require('./render')
+const nodemon = require('nodemon')
 
-module.exports = function server (cliOptions) {
+// nodemon.on('start', function () {
+//   console.log('App has started');
+// }).on('quit', function () {
+//   console.log('App has quit');
+//   process.exit();
+// }).on('restart', function (files) {
+//   console.log('App restarted due to: ', files);
+// });
+
+module.exports = async function jetpack (cliOptions) {
   // get pkg meta
   let pkg
   try {
@@ -37,16 +48,33 @@ module.exports = function server (cliOptions) {
   }, pkg.jetpack, cliOptions)
 
   if (options.start) {
-    return serve({ pkg, options })
+    return client({ pkg, options })
   }
 
   const webpackConfig = wpConf(options)
   const compiler = webpack(webpackConfig)
 
+  // HMM
+  options.client = options.entry
+  options.server = './server'
+  require('./options').__set(options)
+
   if (options.build) {
     build({ pkg, options, webpackConfig, compiler })
   } else {
-    serve({ pkg, options, webpackConfig, compiler })
+
+    console.log(chalk.yellow(`[jetpack] ${pkg.version} 🚀`))
+    console.log(chalk.yellow(`[jetpack] Serving client from ${requireRelative.resolve(options.client, process.cwd())}`))
+    console.log(chalk.yellow(`[jetpack] Running server from ${requireRelative.resolve(options.server, process.cwd())}`))
+
+    const clientPort = await client({ pkg, options, webpackConfig, compiler })
+
+    options.webpackPort = clientPort
+    require('./options').__set({ webpackPort: clientPort })
+
+    const s = await server({ pkg, options, clientPort })
+
+    console.log(chalk.green(`[jetpack] App started on http://localhost:${options.port}`))
   }
 }
 
@@ -59,7 +87,7 @@ function build ({ compiler }) {
   })
 }
 
-function serve ({ pkg, options, webpackConfig, compiler }) {
+async function client ({ pkg, options, webpackConfig, compiler }) {
   const app = express()
 
   let html
@@ -71,34 +99,29 @@ function serve ({ pkg, options, webpackConfig, compiler }) {
   if (options.start) {
     app.use('/dist', express.static(path.join(process.cwd(), 'dist')))
   } else {
-    app.use(webpackDevMiddleware(compiler, {
-      publicPath: webpackConfig.output.publicPath,
-      color: true
-    }))
-
+    app.use(webpackDevMiddleware(compiler, Object.assign({}, webpackConfig.devServer)))
     app.use(webpackHotMiddleware(compiler))
   }
 
   app.use(express.static(path.join(process.cwd(), options.public)))
 
   app.get('*', function (req, res) {
-    res.end(html || render({ name: pkg.name }))
+    res.send(html || render({ name: pkg.name }))
   })
 
-  options.client = options.entry
-  options.server = './server'
-  require('./options').__set(options)
-  require('./options').__set({ __client: app })
+  return new Promise (function (resolve) {
+    let server = app.listen(0, () => {
+      return resolve(server.address().port)
+    })
+  })
+}
 
-  requireRelative(options.server, process.cwd())
+async function server ({ pkg, options, clientPort }) {
+  require('nodemon/lib/utils').log.required(false)
 
-  return app
-
-  // app.listen(options.port, () => {
-  //   console.log('##################################################')
-  //   console.log('#                                                #')
-  //   console.log('#  App started on http://localhost:' + options.port + '          #')
-  //   console.log('#                                                #')
-  //   console.log('##################################################')
-  // })
+  nodemon({
+    exec: `PORT=${options.port} CLIENT_PORT=${clientPort} node ${options.server}`,
+    ext: 'js json yml',
+    ignore: options.client
+  })
 }
