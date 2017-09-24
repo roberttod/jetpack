@@ -12,7 +12,7 @@ module.exports = function (options) {
       filename: '[name].js',
       publicPath: '/dist/'
     },
-    // devtool: 'eval',
+    devtool: 'inline-source-map',
     plugins: [
       new webpack.DefinePlugin({
         'process.env': {
@@ -21,10 +21,24 @@ module.exports = function (options) {
       })
     ],
     module: {
-      loaders: [{
-        test: /.js$/,
-        loader: require.resolve('react-hot-loader/webpack')
-      }, {
+      loaders: [
+      // {
+      //   test: /\.js$/,
+      //   exclude: /(node_modules)/,
+      //   use: {
+      //     loader: require.resolve('babel-loader'),
+      //     options: {
+      //       presets: [
+      //         [require.resolve('babel-preset-env'), { modules: false }],
+      //         require.resolve('babel-preset-react')
+      //       ],
+      //       plugins: [
+      //         require.resolve('react-hot-loader/babel')
+      //       ]
+      //     }
+      //   }
+      // },
+      {
         test: /.js$/,
         loader: require.resolve('buble-loader'),
         query: {
@@ -32,7 +46,8 @@ module.exports = function (options) {
           objectAssign: 'Object.assign',
           transforms: { templateString: false, modules: false }
         }
-      }, {
+      },
+      {
         test: /\.css$/,
         loaders: [
           require.resolve('style-loader'),
@@ -52,20 +67,20 @@ module.exports = function (options) {
     },
     devServer: {
       noInfo: true,
-      hot: true,
-      inline: true,
+      // hot: true,
+      // inline: true,
       publicPath: '/dist/',
-      historyApiFallback: {
-        index: '/dist/'
-      },
-      stats: 'minimal'
-      // stats: {
-      //   assets: false,
-      //   errors: true,
-      //   errorDetails: true,
-      //   warnings: true,
-      //   colors: true
-      // }
+      // historyApiFallback: {
+      //   index: '/dist/'
+      // },
+      // stats: 'minimal'
+      stats: {
+        assets: false,
+        errors: true,
+        errorDetails: true,
+        warnings: true,
+        colors: true
+      }
     }
   }
 
