@@ -12,7 +12,7 @@ module.exports = function (options) {
       filename: '[name].js',
       publicPath: '/dist/'
     },
-    devtool: 'inline-source-map',
+    devtool: 'eval',
     plugins: [
       new webpack.DefinePlugin({
         'process.env': {
